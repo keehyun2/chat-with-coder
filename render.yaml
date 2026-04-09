@@ -2,11 +2,12 @@ services:
   - type: web
     name: chat-with-coder-backend
     runtime: node
+    rootDir: backend
     buildCommand: pnpm install && pnpm build
     startCommand: pnpm start
     envVars:
       - key: PORT
         value: 3001
       - key: CLIENT_ORIGIN
-        value: https://your-vercel-app.vercel.app
+        value: https://frontend-ten-chi-66.vercel.app
     healthCheckPath: /

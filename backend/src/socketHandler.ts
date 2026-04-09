@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io';
-import { ServerToClientEvents, ClientToServerEvents, Message } from '../../types';
+import { ServerToClientEvents, ClientToServerEvents, Message } from '../types';
 import { createRoomManager } from './roomManager';
 
 const roomManager = createRoomManager();

@@ -6,7 +6,12 @@
       "Bash(npx tsc:*)",
       "Bash(npx vite:*)",
       "Bash(netstat -ano)",
-      "Bash(awk '{print $5}')"
+      "Bash(awk '{print $5}')",
+      "Bash(gh auth:*)",
+      "Bash(gh repo:*)",
+      "Bash(vercel:*)",
+      "Bash(npm run:*)",
+      "Bash(git add:*)"
     ]
   }
 }
