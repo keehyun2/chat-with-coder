@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { Message } from '../../../types';
+import { CodeBlock } from './CodeBlock';
 
 interface ChatWindowProps {
   messages: Message[];
@@ -32,14 +33,7 @@ export const ChatWindow = ({ messages }: ChatWindowProps) => {
             </span>
           </div>
           {message.isCode ? (
-            <div className="mt-1 bg-gray-800 rounded-lg p-4 overflow-x-auto">
-              <pre className="text-sm">
-                <code
-                  className="language-${message.language || 'markup'}"
-                  dangerouslySetInnerHTML={{ __html: message.text }}
-                />
-              </pre>
-            </div>
+            <CodeBlock code={message.text} language={message.language} />
           ) : (
             <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
               {message.text}

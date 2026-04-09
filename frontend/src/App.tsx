@@ -4,43 +4,31 @@ import { NicknameModal } from './components/NicknameModal';
 import { ChatWindow } from './components/ChatWindow';
 import { ChatInput } from './components/ChatInput';
 import { UserList } from './components/UserList';
+import 'prismjs/themes/prism-tomorrow.css';
 import type { Message, User } from '../../types';
-
-const highlightCode = (text: string, language?: string): string => {
-  try {
-    const Prism = require('prismjs');
-    const lang = language && Prism.languages[language];
-    if (lang) {
-      return Prism.highlight(text, lang, language);
-    }
-    // 언어가 지정되지 않은 경우 javascript로 시도
-    const jsLang = Prism.languages.javascript;
-    if (jsLang) {
-      return Prism.highlight(text, jsLang, 'javascript');
-    }
-    return text;
-  } catch {
-    return text;
-  }
-};
 
 function App() {
   const { socket, isConnected } = useSocket();
-  const [nickname, setNickname] = useState<string>('');
-  const [showNicknameModal, setShowNicknameModal] = useState(true);
+  const savedNickname = localStorage.getItem('nickname') || '';
+  const [nickname, setNickname] = useState<string>(savedNickname);
+  const [showNicknameModal, setShowNicknameModal] = useState(!savedNickname);
   const [messages, setMessages] = useState<Message[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+
+  // 저장된 닉네임이 있으면 자동 접속
+  useEffect(() => {
+    if (savedNickname && socket) {
+      socket.connect();
+      socket.emit('join', { nickname: savedNickname });
+    }
+  }, [socket]);
 
   useEffect(() => {
     if (!socket) return;
 
     // 메시지 수신
     socket.on('message', (message) => {
-      // 코드 메시지인 경우 하이라이팅 처리
-      const processedMessage: Message = message.isCode
-        ? { ...message, text: highlightCode(message.text, message.language) }
-        : message;
-      setMessages((prev) => [...prev, processedMessage]);
+      setMessages((prev) => [...prev, message]);
     });
 
     // 접속자 목록 수신
@@ -70,6 +58,7 @@ function App() {
   const handleJoin = (newNickname: string) => {
     setNickname(newNickname);
     setShowNicknameModal(false);
+    localStorage.setItem('nickname', newNickname);
     socket?.connect();
     socket?.emit('join', { nickname: newNickname });
   };
