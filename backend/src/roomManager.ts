@@ -1,4 +1,4 @@
-import { User } from '../types';
+import { User } from '@chat/types';
 
 interface RoomManager {
   users: Map<string, User>;

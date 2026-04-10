@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface ChatInputProps {
   onSendMessage: (text: string, isCode: boolean, language?: string) => void;
@@ -7,6 +8,7 @@ interface ChatInputProps {
 export const ChatInput = ({ onSendMessage }: ChatInputProps) => {
   const [text, setText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { t } = useLanguage();
 
   const adjustHeight = () => {
     if (textareaRef.current) {
@@ -62,20 +64,20 @@ export const ChatInput = ({ onSendMessage }: ChatInputProps) => {
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="메시지를 입력하세요... (Shift+Enter: 줄바꿈)"
+        placeholder={t('input.placeholder')}
         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
         rows={1}
         style={{ minHeight: '44px', maxHeight: '200px' }}
       />
       <div className="flex justify-between items-center mt-2">
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          코드 하이라이팅: ```언어명 코드``` 또는 3줄 이상 입력
+          {t('input.code_hint')}
         </p>
         <button
           type="submit"
           className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors"
         >
-          전송
+          {t('input.send')}
         </button>
       </div>
     </form>

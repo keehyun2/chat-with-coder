@@ -77,16 +77,7 @@ When code is detected, `isCode=true` and `language` is sent to server. The `Code
 - **Language support**: JavaScript, TypeScript, Python, Java, C++, C#, Go, Rust, Ruby, PHP, Swift, Kotlin, CSS, JSON, Markdown, Bash
 - **Important**: `useLayoutEffect` is used in `CodeBlock.tsx` to ensure DOM is ready before Prism highlights
 
-## Deployment
-
-- **Frontend**: Vercel (configured in `vercel.json`)
-- **Backend**: Render.com (free tier sleeps after 15min inactivity)
-- **Environment variables**:
-  - Frontend: `VITE_SOCKET_URL` (backend URL)
-  - Backend: `PORT`, `CLIENT_ORIGIN` (frontend URL)
-
 ## Known Limitations
 
 - Messages are stored in server memory only - lost on restart
 - No nickname collision detection - duplicate nicknames allowed
-- Render free tier causes 30-60s cold start delay

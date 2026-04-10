@@ -1,4 +1,5 @@
-import type { User } from '../../types';
+import type { User } from '@chat/types';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface UserListProps {
   users: User[];
@@ -7,24 +8,26 @@ interface UserListProps {
 }
 
 export const UserList = ({ users, currentNickname, onNicknameChange }: UserListProps) => {
+  const { t } = useLanguage();
+
   return (
     <div className="w-64 bg-white dark:bg-gray-800 border-l dark:border-gray-700 p-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-bold text-gray-900 dark:text-white">
-          접속자 ({users.length})
+          {t('users.title')} ({users.length})
         </h3>
         <button
           onClick={onNicknameChange}
           className="text-sm text-blue-500 hover:text-blue-600 transition-colors"
         >
-          변경
+          {t('users.change')}
         </button>
       </div>
       <div className="space-y-2">
         <div className="flex items-center space-x-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
           <div className="w-2 h-2 bg-green-500 rounded-full" />
           <span className="text-sm font-medium text-gray-900 dark:text-white">
-            {currentNickname} (나)
+            {currentNickname} ({t('users.me')})
           </span>
         </div>
         {users

@@ -1,5 +1,5 @@
-import { Socket } from 'socket.io';
-import { ServerToClientEvents, ClientToServerEvents, Message } from '../types';
+import { Socket, Server } from 'socket.io';
+import { ServerToClientEvents, ClientToServerEvents, Message } from '@chat/types';
 import { createRoomManager } from './roomManager';
 
 const roomManager = createRoomManager();
@@ -9,9 +9,9 @@ export const setupSocketHandlers = (
 ) => {
   // 입장
   socket.on('join', ({ nickname }) => {
-    const user = roomManager.addUser(socket.id, nickname);
-    socket.emit('system', { text: `${nickname}님이 입장했습니다.` });
-    socket.broadcast.emit('system', { text: `${nickname}님이 입장했습니다.` });
+    roomManager.addUser(socket.id, nickname);
+    socket.emit('system', { key: 'user_joined', params: { nickname } });
+    socket.broadcast.emit('system', { key: 'user_joined', params: { nickname } });
     io.emit('user_list', { users: roomManager.getAllUsers() });
   });
 
@@ -37,8 +37,8 @@ export const setupSocketHandlers = (
     const user = roomManager.updateNickname(socket.id, nickname);
     if (!user) return;
 
-    socket.emit('system', { text: `닉네임이 ${nickname}으로 변경되었습니다.` });
-    socket.broadcast.emit('system', { text: `${user.nickname}님이 닉네임을 변경했습니다.` });
+    socket.emit('system', { key: 'nickname_changed_self', params: { nickname } });
+    socket.broadcast.emit('system', { key: 'nickname_changed_broadcast', params: { oldNickname: user.nickname } });
     io.emit('user_list', { users: roomManager.getAllUsers() });
   });
 
@@ -46,7 +46,7 @@ export const setupSocketHandlers = (
   socket.on('disconnect', () => {
     const user = roomManager.getUser(socket.id);
     if (user) {
-      socket.broadcast.emit('system', { text: `${user.nickname}님이 퇴장했습니다.` });
+      socket.broadcast.emit('system', { key: 'user_left', params: { nickname: user.nickname } });
       roomManager.removeUser(socket.id);
       io.emit('user_list', { users: roomManager.getAllUsers() });
     }
@@ -54,8 +54,8 @@ export const setupSocketHandlers = (
 };
 
 // io 인스턴스를 저장할 변수
-let io: any;
+let io: Server;
 
-export const setIo = (ioInstance: any) => {
+export const setIo = (ioInstance: Server) => {
   io = ioInstance;
 };

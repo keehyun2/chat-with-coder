@@ -1,3 +1,5 @@
+import { useLanguage } from '../i18n/LanguageContext';
+
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -6,6 +8,8 @@ interface SettingsModalProps {
 }
 
 export const SettingsModal = ({ isOpen, onClose, theme, setTheme }: SettingsModalProps) => {
+  const { t } = useLanguage();
+
   const handleThemeChange = (newTheme: 'light' | 'dark') => {
     localStorage.setItem('theme', newTheme);
     setTheme(newTheme);
@@ -18,7 +22,7 @@ export const SettingsModal = ({ isOpen, onClose, theme, setTheme }: SettingsModa
       <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 shadow-xl">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            설정
+            {t('settings.title')}
           </h2>
           <button
             onClick={onClose}
@@ -31,9 +35,10 @@ export const SettingsModal = ({ isOpen, onClose, theme, setTheme }: SettingsModa
         </div>
 
         <div className="space-y-4">
+          {/* Theme Section */}
           <div>
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              테마
+              {t('settings.theme')}
             </h3>
             <div className="flex space-x-2">
               <button

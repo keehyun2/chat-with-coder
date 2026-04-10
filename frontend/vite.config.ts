@@ -3,7 +3,20 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'html-transform',
+      transformIndexHtml(html, { server }) {
+        if (server) {
+          return html.replace(
+            /<title>(.*?)<\/title>/,
+            '<title>$1 (dev)</title>'
+          )
+        }
+      }
+    }
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
