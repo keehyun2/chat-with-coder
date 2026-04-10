@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="cardBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e1e2e"/>
+      <stop offset="100%" style="stop-color:#181825"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Center card -->
+  <rect x="100" y="80" width="1000" height="470" rx="24" fill="url(#cardBg)" opacity="0.95"/>
+
+  <!-- Chat icon -->
+  <rect x="520" y="120" width="160" height="120" rx="20" fill="white" opacity="0.95"/>
+  <text x="600" y="200" text-anchor="middle" font-family="monospace" font-weight="bold" font-size="48" fill="#6366f1">&lt;/&gt;</text>
+
+  <!-- Title -->
+  <text x="600" y="310" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="700" font-size="56" fill="white">Chat with Coder</text>
+
+  <!-- Subtitle -->
+  <text x="600" y="370" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="400" font-size="28" fill="white" opacity="0.7">Real-time chat for programmers with syntax highlighting</text>
+
+  <!-- Decorative code lines -->
+  <rect x="420" y="420" width="360" height="8" rx="4" fill="white" opacity="0.15"/>
+  <rect x="470" y="445" width="260" height="8" rx="4" fill="white" opacity="0.1"/>
+  <rect x="440" y="470" width="320" height="8" rx="4" fill="white" opacity="0.12"/>
+</svg>

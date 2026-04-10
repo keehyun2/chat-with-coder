@@ -3,11 +3,14 @@ import { useLanguage } from '../i18n/LanguageContext';
 
 interface ChatInputProps {
   onSendMessage: (text: string, isCode: boolean, language?: string) => void;
+  onTypingStart?: () => void;
+  onTypingStop?: () => void;
 }
 
-export const ChatInput = ({ onSendMessage }: ChatInputProps) => {
+export const ChatInput = ({ onSendMessage, onTypingStart, onTypingStop }: ChatInputProps) => {
   const [text, setText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { t } = useLanguage();
 
   const adjustHeight = () => {
@@ -20,6 +23,15 @@ export const ChatInput = ({ onSendMessage }: ChatInputProps) => {
   useEffect(() => {
     adjustHeight();
   }, [text]);
+
+  // 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (typingTimerRef.current) {
+        clearTimeout(typingTimerRef.current);
+      }
+    };
+  }, []);
 
   const detectCode = (input: string): { isCode: boolean; language?: string; code?: string } => {
     // 백틱 코드 블록 감지
@@ -41,12 +53,43 @@ export const ChatInput = ({ onSendMessage }: ChatInputProps) => {
     return { isCode: false, code: input };
   };
 
+  const clearTypingTimer = () => {
+    if (typingTimerRef.current) {
+      clearTimeout(typingTimerRef.current);
+      typingTimerRef.current = null;
+    }
+  };
+
+  const handleChange = (value: string) => {
+    setText(value);
+
+    if (!value.trim()) {
+      // 텍스트 비워지면 즉시 타이핑 중단
+      clearTypingTimer();
+      onTypingStop?.();
+      return;
+    }
+
+    // 타이핑 시작
+    onTypingStart?.();
+
+    // 3초 디바운스: 입력 없으면 타이핑 중단
+    clearTypingTimer();
+    typingTimerRef.current = setTimeout(() => {
+      onTypingStop?.();
+    }, 3000);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (text.trim()) {
       const { isCode, language, code } = detectCode(text);
       onSendMessage(code || text, isCode, language);
       setText('');
+
+      // 메시지 전송 시 타이핑 타이머 클리어 + 중단
+      clearTypingTimer();
+      onTypingStop?.();
     }
   };
 
@@ -62,7 +105,7 @@ export const ChatInput = ({ onSendMessage }: ChatInputProps) => {
       <textarea
         ref={textareaRef}
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => handleChange(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder={t('input.placeholder')}
         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"

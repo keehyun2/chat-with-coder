@@ -1,77 +1,29 @@
-# TODO - chat-with-coder
+# chat-with-coder 개선 로드맵
 
-## Phase 1: 프로젝트 기본 구조 설정
-- [x] 1-1. 루트 package.json 생성 (monorepo workspace)
-- [x] 1-2. frontend 폴더 생성 및 Vite + React + TS 설정
-- [x] 1-3. backend 폴더 생성 및 Node.js + TS 설정
-- [x] 1-4. 공유 타입 정의 (types 패키지)
+## Phase 1: 안정화 및 기본 수정 (필수) ✅ 완료
 
-## Phase 2: 백엔드 개발
-- [x] 2-1. Socket.io 서버 기본 구조 (index.ts)
-- [x] 2-2. 소켓 이벤트 핸들러 (socketHandler.ts)
-- [x] 2-3. 접속자 목록 관리 (roomManager.ts)
-- [x] 2-4. 환경 변수 설정 (.env.example)
-
-## Phase 3: 프론트엔드 개발
-- [x] 3-1. Vite 기본 설정 및 Tailwind CSS 설치
-- [x] 3-2. Socket.io 클라이언트 연결 훅 (useSocket.ts)
-- [x] 3-3. 컴포넌트 구현
-  - [x] NicknameModal.tsx - 닉네임 설정 모달
-  - [x] ChatWindow.tsx - 채팅 메시지 목록
-  - [x] ChatInput.tsx - 메시지 입력창
-  - [x] CodeBlock.tsx - Prism.js 코드 하이라이팅
-  - [x] UserList.tsx - 접속자 목록
-- [x] 3-4. App.tsx 메인 컴포넌트 조립
-- [x] 3-5. 환경 변수 설정 (.env.example)
-
-## Phase 4: 코드 감지 로직 구현
-- [x] 4-1. 백틱 코드 블록 감지
-- [x] 4-2. 자동 코드 감지 (3줄 이상 + 특수문자)
-- [x] 4-3. Prism.js autodetect 플러그인 설정
-
-## Phase 5: 배포 설정
-- [x] 5-1. Vercel 배포 설정 (vercel.json)
-- [x] 5-2. Render 배포 설정 (render.yaml)
-- [x] 5-3. 환경 변수 가이드 업데이트
+- [x] 1.1 console.log 제거
+- [x] 1.2 백엔드 입력 검증 추가 (`backend/src/validation.ts`)
+- [x] 1.3 React Error Boundary (`frontend/src/components/ErrorBoundary.tsx`)
+- [x] 1.4 설정 모달에 언어 선택 추가
+- [x] 1.5 연결 끊김 피드백 개선
 
 ---
 
-## 다음 단계
+## Phase 2: 핵심 UX 개선 ✅ 완료
 
-1. **의존성 설치**
-   ```bash
-   # 루트에서 공통 의존성 설치
-   pnpm install
+- [x] 2.1 타이핑 표시기 — "OO님이 입력 중..." 표시 (Socket.io 타이핑 이벤트, 3초 디바운스)
+- [x] 2.2 코드 블록 복사 버튼 — CodeBlock 상단에 언어명 + 복사 버튼 추가
+- [x] 2.3 토스트 알림 시스템 — `Toast.tsx` 신규, 소켓 에러/복사 성공 등 알림
 
-   # 백엔드 의존성 설치
-   cd backend
-   pnpm install
+## Phase 3: 룸 시스템 + 메시지 영속화 ✅ 완료
 
-   # 프론트엔드 의존성 설치
-   cd ../frontend
-   pnpm install
-   ```
+- [x] 3.1 멀티 룸/채널 지원 — 룸별 사용자 관리, 사이드바 룸 목록 (general, help, showcase)
+- [x] 3.2 메시지 localStorage 영속화 — 룸별 최근 200개 메시지 저장, 새로고침 복원
 
-2. **환경 변수 설정**
-   ```bash
-   # frontend/.env
-   cp frontend/.env.example frontend/.env
+## Phase 4: 다듬기 ✅ 완료
 
-   # backend/.env
-   cp backend/.env.example backend/.env
-   ```
-
-3. **로컬 실행**
-   ```bash
-   # 백엔드 (터미널 1)
-   cd backend
-   pnpm dev
-
-   # 프론트엔드 (터미널 2)
-   cd frontend
-   pnpm dev
-   ```
-
-4. **배포**
-   - **Frontend → Vercel**: Vercel 대시보드에서 GitHub 레포 연결 후 배포
-   - **Backend → Render**: Render 대시보드에서 GitHub 레포 연결 후 배포
+- [x] 4.1 반응형/모바일 레이아웃 — 사이드바 hamburger 메뉴, Tailwind 반응형
+- [x] 4.2 메시지 수정/삭제 — 본인 메시지만 수정/삭제, "(수정됨)" 표시
+- [ ] 4.3 코드 품질 — SVG 아이콘 분리, React.memo, vitest 인프라
+- [x] 4.4 백엔드 Rate Limiting — 10초당 5메시지 제한

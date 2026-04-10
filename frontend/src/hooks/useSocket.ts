@@ -8,6 +8,7 @@ export const useSocket = () => {
   const [socket, setSocket] = useState<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [disconnectReason, setDisconnectReason] = useState<string | null>(null);
 
   useEffect(() => {
     const socketInstance = io(SOCKET_URL, {
@@ -17,12 +18,12 @@ export const useSocket = () => {
     socketInstance.on('connect', () => {
       setIsConnected(true);
       setIsConnecting(false);
-      console.log('Connected to server');
+      setDisconnectReason(null);
     });
 
-    socketInstance.on('disconnect', () => {
+    socketInstance.on('disconnect', (reason) => {
       setIsConnected(false);
-      console.log('Disconnected from server');
+      setDisconnectReason(reason);
     });
 
     socketInstance.on('connect_error', () => {
@@ -42,5 +43,5 @@ export const useSocket = () => {
     };
   }, []);
 
-  return { socket, isConnected, isConnecting };
+  return { socket, isConnected, isConnecting, disconnectReason };
 };

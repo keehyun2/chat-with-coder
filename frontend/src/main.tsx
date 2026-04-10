@@ -2,6 +2,8 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import { LanguageProvider } from './i18n/LanguageContext'
+import { ToastProvider } from './components/Toast'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import './index.css'
 
 // Prism.js must be imported before components that use it
@@ -10,8 +12,12 @@ import 'prismjs/themes/prism-tomorrow.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <LanguageProvider>
-      <App />
-    </LanguageProvider>
+    <ErrorBoundary>
+      <LanguageProvider>
+        <ToastProvider>
+          <App />
+        </ToastProvider>
+      </LanguageProvider>
+    </ErrorBoundary>
   </React.StrictMode>,
 )

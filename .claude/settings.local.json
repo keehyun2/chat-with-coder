@@ -16,7 +16,11 @@
       "Bash(git push:*)",
       "Bash(pnpm build:*)",
       "Bash(pnpm start:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(grep:*)",
+      "Bash(head:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)"
     ]
   }
 }

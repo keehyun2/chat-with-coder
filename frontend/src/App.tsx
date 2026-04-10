@@ -4,14 +4,17 @@ import { NicknameModal } from './components/NicknameModal';
 import { ChatWindow } from './components/ChatWindow';
 import { ChatInput } from './components/ChatInput';
 import { UserList } from './components/UserList';
+import { RoomList } from './components/RoomList';
 import { SettingsModal } from './components/SettingsModal';
 import { useLanguage } from './i18n/LanguageContext';
 import { localizeSystemMessage } from './i18n/systemMessages';
+import { getStoredMessages, storeMessages, getStoredCurrentRoom, storeCurrentRoom } from './utils/messageStorage';
 import 'prismjs/themes/prism-tomorrow.css';
-import type { Message, User, Language } from '@chat/types';
+import type { Message, User, Language, Room } from '@chat/types';
+import { DEFAULT_ROOMS } from '@chat/types';
 
 function App() {
-  const { socket, isConnected, isConnecting } = useSocket();
+  const { socket, isConnected, isConnecting, disconnectReason } = useSocket();
   const { t, language, setLanguage } = useLanguage();
   const languageRef = useRef(language);
   languageRef.current = language;
@@ -20,13 +23,38 @@ function App() {
   const [nickname, setNickname] = useState<string>(savedNickname);
   const [showNicknameModal, setShowNicknameModal] = useState(!savedNickname);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+
+  // Room state
+  const [currentRoom, setCurrentRoom] = useState(() => getStoredCurrentRoom() || 'general');
+  const currentRoomRef = useRef(currentRoom);
+
+  const [rooms] = useState<Room[]>(DEFAULT_ROOMS);
+
+  // Room-based message state (initialized from localStorage)
+  const [messagesByRoom, setMessagesByRoom] = useState<Record<string, Message[]>>(() => {
+    const room = getStoredCurrentRoom() || 'general';
+    return { [room]: getStoredMessages(room) };
+  });
+
+  const [usersByRoom, setUsersByRoom] = useState<Record<string, User[]>>({});
+  const [roomUserCounts, setRoomUserCounts] = useState<Record<string, number>>({});
+  const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Derived values for current room
+  const messages = messagesByRoom[currentRoom] || [];
+  const users = usersByRoom[currentRoom] || [];
+
+  // Keep ref in sync
+  useEffect(() => {
+    currentRoomRef.current = currentRoom;
+  }, [currentRoom]);
+
+  // 테마 적용
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
   });
 
-  // 테마 적용
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -39,7 +67,7 @@ function App() {
   useEffect(() => {
     if (savedNickname && socket) {
       socket.connect();
-      socket.emit('join', { nickname: savedNickname });
+      socket.emit('join', { nickname: savedNickname, room: currentRoomRef.current });
     }
   }, [socket]);
 
@@ -48,12 +76,19 @@ function App() {
 
     // 메시지 수신
     socket.on('message', (message) => {
-      setMessages((prev) => [...prev, message]);
+      setMessagesByRoom((prev) => {
+        const room = message.room;
+        const updated = { ...prev, [room]: [...(prev[room] || []), message] };
+        // Persist to localStorage
+        storeMessages(room, updated[room]);
+        return updated;
+      });
     });
 
     // 접속자 목록 수신
-    socket.on('user_list', ({ users }) => {
-      setUsers(users);
+    socket.on('user_list', ({ users, room }) => {
+      setUsersByRoom((prev) => ({ ...prev, [room]: users }));
+      setRoomUserCounts((prev) => ({ ...prev, [room]: users.length }));
     });
 
     // 시스템 메시지 수신
@@ -70,14 +105,101 @@ function App() {
         text,
         isCode: false,
         timestamp: new Date(),
+        room: currentRoomRef.current,
       };
-      setMessages((prev) => [...prev, systemMessage]);
+      setMessagesByRoom((prev) => {
+        const room = currentRoomRef.current;
+        const updated = { ...prev, [room]: [...(prev[room] || []), systemMessage] };
+        return updated;
+      });
+    });
+
+    // 룸 메시지 수신 (서버에서 전체 메시지 로드 시)
+    socket.on('room_messages', ({ messages: roomMessages }) => {
+      if (roomMessages.length === 0) return;
+      const room = roomMessages[0].room;
+      setMessagesByRoom((prev) => {
+        // Merge: localStorage messages + server messages (deduplicate by id)
+        const stored = prev[room] || [];
+        const allIds = new Set(stored.map((m) => m.id));
+        const newMessages = roomMessages.filter((m) => !allIds.has(m.id));
+        const merged = [...stored, ...newMessages].sort(
+          (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
+        // Keep only last 200
+        const trimmed = merged.slice(-200);
+        storeMessages(room, trimmed);
+        return { ...prev, [room]: trimmed };
+      });
+    });
+
+    // 룸 목록 수신 (정적 룸이므로 처리 불필요)
+    socket.on('room_list', () => {});
+
+    // 타이핑 수신
+    socket.on('typing_start', ({ nickname: nick, room }) => {
+      if (room === currentRoomRef.current) {
+        setTypingUsers((prev) => new Set(prev).add(nick));
+      }
+    });
+
+    socket.on('typing_stop', ({ nickname: nick, room }) => {
+      if (room === currentRoomRef.current) {
+        setTypingUsers((prev) => {
+          const next = new Set(prev);
+          next.delete(nick);
+          return next;
+        });
+      }
+    });
+
+    // 메시지 수정 수신
+    socket.on('message_updated', ({ id, text, edited }) => {
+      setMessagesByRoom((prev) => {
+        const updated: Record<string, Message[]> = {};
+        for (const [room, msgs] of Object.entries(prev)) {
+          updated[room] = msgs.map((m) =>
+            m.id === id ? { ...m, text, edited } : m
+          );
+        }
+        // Persist any room that changed
+        for (const [room, msgs] of Object.entries(updated)) {
+          if (msgs !== prev[room]) {
+            storeMessages(room, msgs);
+          }
+        }
+        return updated;
+      });
+    });
+
+    // 메시지 삭제 수신
+    socket.on('message_deleted', ({ id }) => {
+      setMessagesByRoom((prev) => {
+        const updated: Record<string, Message[]> = {};
+        for (const [room, msgs] of Object.entries(prev)) {
+          updated[room] = msgs.map((m) =>
+            m.id === id ? { ...m, text: '', deleted: true } : m
+          );
+        }
+        for (const [room, msgs] of Object.entries(updated)) {
+          if (msgs !== prev[room]) {
+            storeMessages(room, msgs);
+          }
+        }
+        return updated;
+      });
     });
 
     return () => {
       socket.off('message');
       socket.off('user_list');
       socket.off('system');
+      socket.off('room_messages');
+      socket.off('room_list');
+      socket.off('typing_start');
+      socket.off('typing_stop');
+      socket.off('message_updated');
+      socket.off('message_deleted');
     };
   }, [socket, t]);
 
@@ -86,7 +208,7 @@ function App() {
     setShowNicknameModal(false);
     localStorage.setItem('nickname', newNickname);
     socket?.connect();
-    socket?.emit('join', { nickname: newNickname });
+    socket?.emit('join', { nickname: newNickname, room: currentRoomRef.current });
   };
 
   const handleSendMessage = (text: string, isCode: boolean, language?: string) => {
@@ -101,6 +223,23 @@ function App() {
       setNickname(trimmed);
       socket?.emit('nickname_change', { nickname: trimmed });
     }
+  };
+
+  const handleSwitchRoom = (newRoom: string) => {
+    if (newRoom === currentRoom) return;
+    setTypingUsers(new Set());
+    storeCurrentRoom(newRoom);
+    setCurrentRoom(newRoom);
+    setMobileMenuOpen(false);
+    socket?.emit('switch_room', { room: newRoom });
+  };
+
+  const handleEditMessage = (id: string, text: string) => {
+    socket?.emit('message_edit', { id, text });
+  };
+
+  const handleDeleteMessage = (id: string) => {
+    socket?.emit('message_delete', { id });
   };
 
   return (
@@ -118,9 +257,23 @@ function App() {
           {/* Header */}
           <header className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 p-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                Chat with Coder
-              </h1>
+              <div className="flex items-center gap-3">
+                <button
+                  className="md:hidden text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  title={t('menu.open')}
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Chat with Coder
+                </h1>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  # {t(`rooms.${currentRoom}`)}
+                </span>
+              </div>
               <div className="flex items-center space-x-4">
                 <a
                   href="https://github.com/keehyun2/chat-with-coder"
@@ -136,11 +289,14 @@ function App() {
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value as Language)}
-                  className="text-sm bg-transparent border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  className="text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                 >
                   <option value="ko">한국어</option>
                   <option value="en">English</option>
                   <option value="zh">中文</option>
+                  <option value="ja">日本語</option>
+                  <option value="id">Bahasa Indonesia</option>
+                  <option value="vi">Tiếng Việt</option>
                 </select>
                 <button
                   onClick={() => setShowSettingsModal(true)}
@@ -167,13 +323,39 @@ function App() {
           </header>
 
           {/* Main Content */}
-          <div className="flex-1 flex overflow-hidden">
-            <div className="flex-1 flex flex-col">
-              <ChatWindow messages={messages} />
+          <div className="flex-1 flex overflow-hidden relative">
+            {/* Mobile overlay */}
+            {mobileMenuOpen && (
+              <div
+                className="fixed inset-0 bg-black/50 z-20 md:hidden"
+                onClick={() => setMobileMenuOpen(false)}
+              />
+            )}
+            {/* RoomList - always visible on md+, overlay on mobile */}
+            <div className={`${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:static z-30 h-full transition-transform duration-200`}>
+              <RoomList
+                rooms={rooms}
+                currentRoom={currentRoom}
+                roomUserCounts={roomUserCounts}
+                onSwitchRoom={handleSwitchRoom}
+              />
+            </div>
+            <div className="flex-1 flex flex-col min-w-0">
+              <ChatWindow
+                messages={messages}
+                typingUsers={typingUsers}
+                currentNickname={nickname}
+                onEditMessage={handleEditMessage}
+                onDeleteMessage={handleDeleteMessage}
+              />
               {isConnected ? (
-                <ChatInput onSendMessage={handleSendMessage} />
+                <ChatInput
+                  onSendMessage={handleSendMessage}
+                  onTypingStart={() => socket?.emit('typing_start')}
+                  onTypingStop={() => socket?.emit('typing_stop')}
+                />
               ) : isConnecting ? (
-                <div className="p-6 text-center border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <div className="p-6 text-center border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                   <div className="flex flex-col items-center gap-2">
                     <svg className="w-8 h-8 text-blue-500 animate-spin" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -190,13 +372,22 @@ function App() {
                     </p>
                   </div>
                 </div>
+              ) : !isConnected && !isConnecting && messages.length > 0 ? (
+                <div className="p-4 text-center border-t dark:border-gray-700 bg-red-50 dark:bg-red-900/20">
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    {t('header.disconnected')}
+                    {disconnectReason && ` (${disconnectReason})`}
+                  </p>
+                </div>
               ) : null}
             </div>
-            <UserList
-              users={users}
-              currentNickname={nickname}
-              onNicknameChange={handleNicknameChange}
-            />
+            <div className="hidden md:block">
+              <UserList
+                users={users}
+                currentNickname={nickname}
+                onNicknameChange={handleNicknameChange}
+              />
+            </div>
           </div>
         </>
       )}
