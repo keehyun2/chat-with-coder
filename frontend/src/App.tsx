@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSocket } from './hooks/useSocket';
 import { NicknameModal } from './components/NicknameModal';
+import { NicknameChangeModal } from './components/NicknameChangeModal';
 import { ChatWindow } from './components/ChatWindow';
 import { ChatInput } from './components/ChatInput';
 import { UserList } from './components/UserList';
@@ -22,6 +23,7 @@ function App() {
   const savedNickname = localStorage.getItem('nickname') || '';
   const [nickname, setNickname] = useState<string>(savedNickname);
   const [showNicknameModal, setShowNicknameModal] = useState(!savedNickname);
+  const [showNicknameChangeModal, setShowNicknameChangeModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   // Room state
@@ -223,12 +225,13 @@ function App() {
   };
 
   const handleNicknameChange = () => {
-    const newNickname = prompt(t('nickname.change_prompt'), nickname);
-    if (newNickname && newNickname.trim() && newNickname !== nickname) {
-      const trimmed = newNickname.trim();
-      setNickname(trimmed);
-      socket?.emit('nickname_change', { nickname: trimmed });
-    }
+    setShowNicknameChangeModal(true);
+  };
+
+  const handleNicknameChangeSubmit = (newNickname: string) => {
+    setNickname(newNickname);
+    localStorage.setItem('nickname', newNickname);
+    socket?.emit('nickname_change', { nickname: newNickname });
   };
 
   const handleSwitchRoom = (newRoom: string) => {
@@ -249,13 +252,19 @@ function App() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-white dark:bg-gray-100">
+    <div className="h-screen flex flex-col bg-white dark:bg-gray-900">
       {showNicknameModal && <NicknameModal onJoin={handleJoin} />}
       <SettingsModal
         isOpen={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
         theme={theme}
         setTheme={setTheme}
+      />
+      <NicknameChangeModal
+        isOpen={showNicknameChangeModal}
+        onClose={() => setShowNicknameChangeModal(false)}
+        currentNickname={nickname}
+        onSubmit={handleNicknameChangeSubmit}
       />
 
       {!showNicknameModal && (

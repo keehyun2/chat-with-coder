@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Message } from '@chat/types';
 import { CodeBlock } from './CodeBlock';
+import { EditMessageModal } from './EditMessageModal';
+import { DeleteConfirmModal } from './DeleteConfirmModal';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useTranslation } from '../hooks/useTranslation';
 
@@ -18,6 +20,8 @@ export const ChatWindow = ({ messages, typingUsers, currentNickname, onEditMessa
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { language, t } = useLanguage();
   const { toggleTranslation, isTranslated, isLoading, getTranslatedText, getError } = useTranslation(language);
+  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+  const [deletingMessage, setDeletingMessage] = useState<Message | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -48,15 +52,22 @@ export const ChatWindow = ({ messages, typingUsers, currentNickname, onEditMessa
   const typingText = getTypingText();
 
   const handleEdit = (message: Message) => {
-    const newText = prompt(t('message.edit_prompt'), message.text);
-    if (newText && newText.trim() && newText !== message.text) {
-      onEditMessage(message.id, newText.trim());
+    setEditingMessage(message);
+  };
+
+  const handleEditSubmit = (newText: string) => {
+    if (editingMessage) {
+      onEditMessage(editingMessage.id, newText);
     }
   };
 
   const handleDelete = (message: Message) => {
-    if (confirm(t('message.delete') + '?')) {
-      onDeleteMessage(message.id);
+    setDeletingMessage(message);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deletingMessage) {
+      onDeleteMessage(deletingMessage.id);
     }
   };
 
@@ -167,6 +178,18 @@ export const ChatWindow = ({ messages, typingUsers, currentNickname, onEditMessa
         </div>
       )}
       <div ref={messagesEndRef} />
+      <EditMessageModal
+        isOpen={editingMessage !== null}
+        onClose={() => setEditingMessage(null)}
+        currentText={editingMessage?.text || ''}
+        onSubmit={handleEditSubmit}
+      />
+      <DeleteConfirmModal
+        isOpen={deletingMessage !== null}
+        onClose={() => setDeletingMessage(null)}
+        onConfirm={handleDeleteConfirm}
+        messagePreview={deletingMessage?.text}
+      />
     </div>
   );
 };

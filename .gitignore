@@ -38,3 +38,6 @@ Thumbs.db
 .fusebox/
 .dynamodb/
 .tern-port/
+
+.vercel
+gt.ps1

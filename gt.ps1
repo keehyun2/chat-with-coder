@@ -5,7 +5,7 @@
     
     switch ($mode) {
         "g" {  # GLM 모드 (Z.ai)
-            $env:ANTHROPIC_AUTH_TOKEN = "b5e84d0ee2904a53a114d5a2ecbc48ea.YVc3MnZKCAPwLsIL"
+            $env:ANTHROPIC_AUTH_TOKEN = "1c04238295d9493aa015f982896a8bbf.xr8XGrPhsoxhyNE0"
             $env:ANTHROPIC_BASE_URL = "https://api.z.ai/api/anthropic"
             $env:ANTHROPIC_VERSION = "2023-06-01"
             $env:API_TIMEOUT_MS = "3000000"
