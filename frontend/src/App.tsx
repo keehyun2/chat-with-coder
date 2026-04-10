@@ -136,6 +136,11 @@ function App() {
     // 룸 목록 수신 (정적 룸이므로 처리 불필요)
     socket.on('room_list', () => {});
 
+    // 전체 방 인원 수 수신
+    socket.on('room_user_counts', ({ counts }) => {
+      setRoomUserCounts(counts);
+    });
+
     // 타이핑 수신
     socket.on('typing_start', ({ nickname: nick, room }) => {
       if (room === currentRoomRef.current) {
@@ -196,6 +201,7 @@ function App() {
       socket.off('system');
       socket.off('room_messages');
       socket.off('room_list');
+      socket.off('room_user_counts');
       socket.off('typing_start');
       socket.off('typing_stop');
       socket.off('message_updated');

@@ -52,6 +52,7 @@ export const setupSocketHandlers = (
     // Notify others in the room
     socket.to(roomId).emit('system', { key: 'user_joined', params: { nickname: sanitized } });
     io.to(roomId).emit('user_list', { users: roomManager.getRoomUsers(roomId), room: roomId });
+    io.emit('room_user_counts', { counts: roomManager.getRoomUserCounts() });
   });
 
   // 메시지
@@ -171,6 +172,9 @@ export const setupSocketHandlers = (
     socket.to(newRoom).emit('system', { key: 'room_joined', params: { nickname: user.nickname, room: newRoom } });
     io.to(newRoom).emit('user_list', { users: roomManager.getRoomUsers(newRoom), room: newRoom });
 
+    // Broadcast updated room counts to all clients
+    io.emit('room_user_counts', { counts: roomManager.getRoomUserCounts() });
+
     // Send room messages to the switching user
     socket.emit('room_messages', { messages: roomManager.getRecentMessages(newRoom) });
     socket.emit('system', { key: 'room_joined', params: { nickname: user.nickname, room: newRoom } });
@@ -185,6 +189,7 @@ export const setupSocketHandlers = (
       socket.to(room).emit('system', { key: 'user_left', params: { nickname: user.nickname } });
       socket.to(room).emit('typing_stop', { nickname: user.nickname, room });
       io.to(room).emit('user_list', { users: roomManager.getRoomUsers(room), room });
+      io.emit('room_user_counts', { counts: roomManager.getRoomUserCounts() });
     }
   });
 

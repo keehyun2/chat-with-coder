@@ -61,6 +61,7 @@ export interface ServerToClientEvents {
   typing_stop: (data: { nickname: string; room: string }) => void;
   room_list: (data: { rooms: Room[] }) => void;
   room_messages: (data: { messages: Message[] }) => void;
+  room_user_counts: (data: { counts: Record<string, number> }) => void;
 }
 
 export interface ClientToServerEvents {
