@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import type { Message } from '@chat/types';
 import { CodeBlock } from './CodeBlock';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface ChatWindowProps {
   messages: Message[];
@@ -16,6 +17,7 @@ const localeMap = { ko: 'ko-KR', en: 'en-US', zh: 'zh-CN', ja: 'ja-JP', id: 'id-
 export const ChatWindow = ({ messages, typingUsers, currentNickname, onEditMessage, onDeleteMessage }: ChatWindowProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { language, t } = useLanguage();
+  const { toggleTranslation, isTranslated, isLoading, getTranslatedText, getError } = useTranslation(language);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -85,27 +87,71 @@ export const ChatWindow = ({ messages, typingUsers, currentNickname, onEditMessa
           ) : message.isCode ? (
             <CodeBlock code={message.text} language={message.language} />
           ) : (
-            <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
-              {message.text}
-            </p>
+            <div className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
+              {isTranslated(message.id) ? (
+                <>
+                  <p>{getTranslatedText(message.id)}</p>
+                  <span className="text-xs text-blue-400 dark:text-blue-500 mt-0.5 inline-block">
+                    {t('message.translated')}
+                  </span>
+                </>
+              ) : (
+                <p>{message.text}</p>
+              )}
+              {isLoading(message.id) && (
+                <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
+                  <span className="inline-block w-3 h-3 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+                  <span>{t('message.translating')}</span>
+                </div>
+              )}
+              {getError(message.id) && (
+                <p className="text-xs text-red-400 mt-0.5">{getError(message.id)}</p>
+              )}
+            </div>
           )}
-          {/* Edit/Delete buttons — only for own non-deleted non-system messages */}
-          {!message.deleted && !message.id.startsWith('system-') && message.nickname === currentNickname && (
+          {/* Hover actions */}
+          {!message.deleted && !message.id.startsWith('system-') && (
             <div className="absolute top-0 right-0 hidden group-hover:flex gap-1">
-              <button
-                onClick={() => handleEdit(message)}
-                className="text-xs text-gray-400 hover:text-blue-500 px-1.5 py-0.5 rounded bg-white dark:bg-gray-800 shadow-sm border dark:border-gray-600"
-                title={t('message.edit')}
-              >
-                {t('message.edit')}
-              </button>
-              <button
-                onClick={() => handleDelete(message)}
-                className="text-xs text-gray-400 hover:text-red-500 px-1.5 py-0.5 rounded bg-white dark:bg-gray-800 shadow-sm border dark:border-gray-600"
-                title={t('message.delete')}
-              >
-                {t('message.delete')}
-              </button>
+              {/* Translate button — non-code messages */}
+              {!message.isCode && (
+                <button
+                  onClick={() => toggleTranslation(message.id, message.text, language)}
+                  disabled={isLoading(message.id)}
+                  className={`text-xs px-1.5 py-0.5 rounded bg-white dark:bg-gray-800 shadow-sm border dark:border-gray-600 ${
+                    isTranslated(message.id)
+                      ? 'text-blue-500 border-blue-300 dark:border-blue-600'
+                      : 'text-gray-400 hover:text-blue-500'
+                  }`}
+                  title={isTranslated(message.id) ? t('message.show_original') : t('message.translate')}
+                >
+                  {isLoading(message.id) ? (
+                    <span className="inline-block w-3 h-3 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+                  ) : isTranslated(message.id) ? (
+                    t('message.show_original')
+                  ) : (
+                    t('message.translate')
+                  )}
+                </button>
+              )}
+              {/* Edit/Delete — own messages only */}
+              {message.nickname === currentNickname && (
+                <>
+                  <button
+                    onClick={() => handleEdit(message)}
+                    className="text-xs text-gray-400 hover:text-blue-500 px-1.5 py-0.5 rounded bg-white dark:bg-gray-800 shadow-sm border dark:border-gray-600"
+                    title={t('message.edit')}
+                  >
+                    {t('message.edit')}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(message)}
+                    className="text-xs text-gray-400 hover:text-red-500 px-1.5 py-0.5 rounded bg-white dark:bg-gray-800 shadow-sm border dark:border-gray-600"
+                    title={t('message.delete')}
+                  >
+                    {t('message.delete')}
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>

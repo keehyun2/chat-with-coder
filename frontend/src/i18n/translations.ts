@@ -72,6 +72,11 @@ export const translations: Record<Language, TranslationDict> = {
     'message.edited': '(수정됨)',
     'message.deleted': '삭제된 메시지',
     'message.edit_prompt': '메시지를 수정하세요:',
+    'message.translate': '번역',
+    'message.show_original': '원문',
+    'message.translated': '(번역됨)',
+    'message.translating': '번역 중...',
+    'message.translate_error': '번역에 실패했습니다',
   },
   en: {
     'modal.enter_nickname': 'Enter a nickname to join',
@@ -134,6 +139,11 @@ export const translations: Record<Language, TranslationDict> = {
     'message.edited': '(edited)',
     'message.deleted': 'Message deleted',
     'message.edit_prompt': 'Edit your message:',
+    'message.translate': 'Translate',
+    'message.show_original': 'Original',
+    'message.translated': '(translated)',
+    'message.translating': 'Translating...',
+    'message.translate_error': 'Translation failed',
   },
   zh: {
     'modal.enter_nickname': '输入昵称加入聊天',
@@ -196,6 +206,11 @@ export const translations: Record<Language, TranslationDict> = {
     'message.edited': '(已编辑)',
     'message.deleted': '消息已删除',
     'message.edit_prompt': '编辑您的消息：',
+    'message.translate': '翻译',
+    'message.show_original': '原文',
+    'message.translated': '(已翻译)',
+    'message.translating': '翻译中...',
+    'message.translate_error': '翻译失败',
   },
   ja: {
     // NicknameModal
@@ -266,6 +281,11 @@ export const translations: Record<Language, TranslationDict> = {
     'message.edited': '(編集済み)',
     'message.deleted': 'メッセージが削除されました',
     'message.edit_prompt': 'メッセージを編集してください：',
+    'message.translate': '翻訳',
+    'message.show_original': '原文',
+    'message.translated': '(翻訳済み)',
+    'message.translating': '翻訳中...',
+    'message.translate_error': '翻訳に失敗しました',
   },
   id: {
     // NicknameModal
@@ -336,6 +356,11 @@ export const translations: Record<Language, TranslationDict> = {
     'message.edited': '(diedit)',
     'message.deleted': 'Pesan dihapus',
     'message.edit_prompt': 'Edit pesan Anda:',
+    'message.translate': 'Terjemahkan',
+    'message.show_original': 'Asli',
+    'message.translated': '(diterjemahkan)',
+    'message.translating': 'Menerjemahkan...',
+    'message.translate_error': 'Terjemahan gagal',
   },
   vi: {
     // NicknameModal
@@ -406,5 +431,10 @@ export const translations: Record<Language, TranslationDict> = {
     'message.edited': '(đã sửa)',
     'message.deleted': 'Tin nhắn đã bị xóa',
     'message.edit_prompt': 'Sửa tin nhắn của bạn:',
+    'message.translate': 'Dịch',
+    'message.show_original': 'Gốc',
+    'message.translated': '(đã dịch)',
+    'message.translating': 'Đang dịch...',
+    'message.translate_error': 'Dịch thất bại',
   },
 };
