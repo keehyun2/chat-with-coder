@@ -31,7 +31,7 @@ export interface User {
 }
 
 // 언어 타입
-export type Language = 'ko' | 'en' | 'zh' | 'ja' | 'id' | 'vi';
+export type Language = 'ko' | 'en' | 'zh-CN' | 'zh-TW' | 'ja' | 'id' | 'vi' | 'es' | 'ar' | 'pt' | 'hi' | 'th' | 'de' | 'fr';
 
 // 시스템 메시지 키
 export type SystemMessageKey =

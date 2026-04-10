@@ -15,7 +15,11 @@ function detectLanguage(): Language {
 
   const browserLang = navigator.language.toLowerCase();
   if (browserLang.startsWith('ko')) return 'ko';
-  if (browserLang.startsWith('zh')) return 'zh';
+  if (browserLang.startsWith('zh')) {
+    // Default to Simplified Chinese for zh-CN, zh-TW, zh-HK, zh-SG
+    if (browserLang.includes('tw') || browserLang.includes('hk')) return 'zh-TW';
+    return 'zh-CN';
+  }
   return 'en';
 }
 

@@ -14,7 +14,22 @@ interface ChatWindowProps {
   onDeleteMessage: (id: string) => void;
 }
 
-const localeMap = { ko: 'ko-KR', en: 'en-US', zh: 'zh-CN', ja: 'ja-JP', id: 'id-ID', vi: 'vi-VN' } as const;
+const localeMap = {
+  ko: 'ko-KR',
+  en: 'en-US',
+  'zh-CN': 'zh-CN',
+  'zh-TW': 'zh-TW',
+  ja: 'ja-JP',
+  id: 'id-ID',
+  vi: 'vi-VN',
+  es: 'es-ES',
+  ar: 'ar-SA',
+  pt: 'pt-BR',
+  hi: 'hi-IN',
+  th: 'th-TH',
+  de: 'de-DE',
+  fr: 'fr-FR',
+} as const;
 
 export const ChatWindow = ({ messages, typingUsers, currentNickname, onEditMessage, onDeleteMessage }: ChatWindowProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);

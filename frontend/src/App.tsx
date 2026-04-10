@@ -308,10 +308,18 @@ function App() {
                 >
                   <option value="ko">한국어</option>
                   <option value="en">English</option>
-                  <option value="zh">中文</option>
+                  <option value="zh-CN">简体中文</option>
+                  <option value="zh-TW">繁體中文</option>
                   <option value="ja">日本語</option>
                   <option value="id">Bahasa Indonesia</option>
                   <option value="vi">Tiếng Việt</option>
+                  <option value="es">Español</option>
+                  <option value="ar">العربية</option>
+                  <option value="pt">Português</option>
+                  <option value="hi">हिन्दी</option>
+                  <option value="th">ไทย</option>
+                  <option value="de">Deutsch</option>
+                  <option value="fr">Français</option>
                 </select>
                 <button
                   onClick={() => setShowSettingsModal(true)}
